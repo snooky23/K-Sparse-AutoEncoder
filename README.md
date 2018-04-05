@@ -33,5 +33,5 @@
 
 ## How to use
 
-* main_mnist.py - is the main runnable example, you can easily choose between running a simple MNIST classification or a K-Sparse AutoEncoder.
-* auto_encoder_3.ipynb - this is the Jupiter example, we used it to show the K-Sparse code and graphs in an easy fashion. 
+* `main_mnist.py` - is the main runnable example, you can easily choose between running a simple MNIST classification or a K-Sparse AutoEncoder task.
+* `auto_encoder_3.ipynb` - this is the Jupiter example, we used it to show the K-Sparse code and graphs in an easy fashion. 
