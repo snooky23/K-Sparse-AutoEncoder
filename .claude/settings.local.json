@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mkdir:*)",
+      "Bash(python run_tests.py:*)",
+      "Bash(python -m pytest tests/layers/test_linear_layer.py -v)",
+      "Bash(python -m pytest tests/ -v)"
     ],
     "deny": []
   }
