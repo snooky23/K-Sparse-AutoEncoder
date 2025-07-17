@@ -1,13 +1,23 @@
+"""Main script for MNIST classification and K-sparse autoencoder experiments.
+
+This script provides functionality to train and evaluate both:
+1. MNIST digit classification using a standard neural network
+2. K-sparse autoencoder for MNIST digit reconstruction
+"""
+from typing import List
+import numpy as np
+import matplotlib.pyplot as plt
 from layers.linear_layer import LinearLayer
 from layers.sparse_layer import SparseLayer
-from nets.fcnn import *
-from utilis.activations import *
-import matplotlib.pyplot as plt
+from nets.fcnn import FCNeuralNet
+from utilis.activations import sigmoid_function
+from utilis.cost_functions import subtract_err
 import utilis.mnist.mnist_helper as mh
 
 
-def run_mnist_predictions():
-    helper = mh.mnist_helper()
+def run_mnist_predictions() -> None:
+    """Train and evaluate MNIST digit classification."""
+    helper = mh.MnistHelper()
     y_labels, train_img, test_lbl, test_img = helper.get_data()
     # print_samples(train_img, train_lbl, n_samples=10)
 
@@ -37,7 +47,8 @@ def run_mnist_predictions():
     print("test accuracy: {0:.2f}%".format(accuracy))
 
 
-def run_auto_encoder():
+def run_auto_encoder() -> None:
+    """Train and evaluate K-sparse autoencoder on MNIST."""
     img_size = 28
     num_hidden = 100
     k = 10
@@ -47,7 +58,7 @@ def run_auto_encoder():
     print_epochs = 1000
     num_test_examples = 10
 
-    helper = mh.mnist_helper()
+    helper = mh.MnistHelper()
     train_lbl, train_img, test_lbl, test_img = helper.get_data()
 
     x_data = train_img.reshape(-1, img_size * img_size) / np.float32(256)
@@ -88,7 +99,15 @@ def run_auto_encoder():
     plt.show()
 
 
-def add_plot_images(images, cols=10, img_size=28, title=None):
+def add_plot_images(images: np.ndarray, cols: int = 10, img_size: int = 28, title: str = None) -> None:
+    """Plot a grid of images.
+    
+    Args:
+        images: Array of images to plot
+        cols: Number of columns in the grid
+        img_size: Size of each image
+        title: Optional title for the plot
+    """
     n_images = len(images)
     fig = plt.figure(figsize=(img_size, img_size))
     plt.title(title, fontsize=24)
@@ -100,7 +119,8 @@ def add_plot_images(images, cols=10, img_size=28, title=None):
         plt.imshow(img)
 
 
-def main():
+def main() -> None:
+    """Main function to choose between classification and autoencoder tasks."""
     is_auto_encoder = False
     # is_auto_encoder = True
     if is_auto_encoder:
