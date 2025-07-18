@@ -17,7 +17,13 @@ import os
 from datetime import datetime
 
 # Set style
-plt.style.use('seaborn-v0_8')
+try:
+    plt.style.use('seaborn-v0_8')
+except:
+    try:
+        plt.style.use('seaborn')
+    except:
+        plt.style.use('default')
 sns.set_palette("husl")
 
 
@@ -267,7 +273,8 @@ class ModelVisualizer:
             weights = layer.weights.flatten()
             
             # Plot histogram
-            axes[i].hist(weights, bins=50, alpha=0.7, color=self.colors[i % len(self.colors)])
+            colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+            axes[i].hist(weights, bins=50, alpha=0.7, color=colors[i % len(colors)])
             axes[i].set_title(f'{layer.name} Weights', fontsize=12, fontweight='bold')
             axes[i].set_xlabel('Weight Value')
             axes[i].set_ylabel('Frequency')
@@ -442,8 +449,9 @@ class ComparisonVisualizer:
             experiments = list(results.keys())
             values = [results[exp].get(metric, 0) for exp in experiments]
             
+            colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
             bars = axes[i].bar(experiments, values, alpha=0.7, 
-                             color=[self.colors[j % len(self.colors)] for j in range(len(experiments))])
+                             color=[colors[j % len(colors)] for j in range(len(experiments))])
             axes[i].set_title(f'{metric.upper()} Comparison', fontsize=12, fontweight='bold')
             axes[i].set_ylabel(metric.upper())
             axes[i].tick_params(axis='x', rotation=45)

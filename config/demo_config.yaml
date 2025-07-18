@@ -1,0 +1,49 @@
+curriculum:
+  curriculum_epochs: 50
+  enabled: true
+  final_k_ratio: 1.0
+  initial_k_ratio: 0.6
+data:
+  augmentation: false
+  data_path: data/
+  dataset: mnist
+  normalize: true
+  test_samples: null
+  train_samples: null
+description: K-Sparse AutoEncoder experiment
+loss:
+  auxk_coeff: 0.02
+  dead_neuron_coeff: 0.001
+  diversity_coeff: 0.01
+  l1_coeff: 0.01
+  loss_type: comprehensive_loss
+  mse_coeff: 1.0
+name: k_sparse_autoencoder
+network:
+  activation: sigmoid
+  hidden_size: 100
+  initialization_method: tied
+  input_size: 784
+  num_k_sparse: 25
+  output_size: 784
+  sparse_activation_type: jump_relu
+output_dir: experiments/
+random_seed: 42
+training:
+  batch_size: 64
+  beta1: 0.9
+  beta2: 0.999
+  early_stopping_patience: 10
+  epochs: 1000
+  epsilon: 1.0e-08
+  gradient_clip_norm: null
+  l1_reg: 0.0
+  l2_reg: 0.0
+  learning_rate: 0.1
+  lr_decay_factor: 0.1
+  lr_decay_patience: 5
+  lr_schedule: constant
+  momentum: 0.9
+  optimizer: sgd
+  print_epochs: 100
+  validation_split: 0.2

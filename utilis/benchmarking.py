@@ -382,7 +382,7 @@ class QualityBenchmark:
         c1 = 0.01 ** 2
         c2 = 0.03 ** 2
         
-        ssim = ((2 * mu1 * mu2 + c1) * (2 * sigma12 + c2)) / \\
+        ssim = ((2 * mu1 * mu2 + c1) * (2 * sigma12 + c2)) / \
                ((mu1 ** 2 + mu2 ** 2 + c1) * (sigma1_sq + sigma2_sq + c2))
         
         return ssim

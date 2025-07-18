@@ -414,7 +414,7 @@ class LearningRateScheduler:
             T_max = self.schedule_params.get('T_max', 100)
             eta_min = self.schedule_params.get('eta_min', 0.0)
             
-            self.optimizer.learning_rate = eta_min + (self.initial_lr - eta_min) * \\
+            self.optimizer.learning_rate = eta_min + (self.initial_lr - eta_min) * \
                                          (1 + np.cos(np.pi * self.step_count / T_max)) / 2
         
         elif self.schedule_type == "plateau":

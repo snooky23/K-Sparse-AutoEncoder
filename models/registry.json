@@ -1,0 +1,12 @@
+{
+  "demo_model": {
+    "path": "models/demo_model.npz",
+    "description": "Demo model with all features",
+    "tags": [
+      "demo",
+      "jump_relu",
+      "comprehensive_loss"
+    ],
+    "registered_at": "2025-07-18T17:43:39.128633"
+  }
+}
