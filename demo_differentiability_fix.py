@@ -10,51 +10,34 @@ from layers.sparse_layer import SparseLayer
 from nets.fcnn import FCNeuralNet
 from utilis.activations import sigmoid_function
 from utilis.cost_functions import subtract_err
+from utilis.mnist.mnist_helper import MnistHelper
 import os
 
 
-def create_synthetic_data(n_samples=1000, n_features=784):
-    """Create synthetic data for demonstration."""
-    np.random.seed(42)
+def load_mnist_data():
+    """Load real MNIST data for demonstration."""
+    print("   Loading MNIST dataset...")
+    mnist = MnistHelper()
+    train_lbl, train_img, test_lbl, test_img = mnist.get_data()
     
-    # Create synthetic images (simple patterns)
-    data = np.random.randn(n_samples, n_features)
+    # Flatten images and normalize to [0, 1]
+    train_data = train_img.reshape(-1, 784) / 255.0
+    test_data = test_img.reshape(-1, 784) / 255.0
     
-    # Add some structure (create "digit-like" patterns)
-    for i in range(n_samples):
-        # Create random rectangles and circles
-        img = data[i].reshape(28, 28)
-        
-        # Add rectangular patterns
-        if i % 3 == 0:
-            img[10:18, 10:18] += 2.0
-        elif i % 3 == 1:
-            img[5:23, 5:23] += 1.5
-            img[10:18, 10:18] -= 1.0
-        else:
-            # Add circular pattern
-            center = (14, 14)
-            for y in range(28):
-                for x in range(28):
-                    dist = np.sqrt((x - center[0])**2 + (y - center[1])**2)
-                    if dist < 8:
-                        img[y, x] += 1.5
-        
-        data[i] = img.flatten()
-    
-    # Normalize to [0, 1]
-    data = (data - data.min()) / (data.max() - data.min())
-    
-    return data
+    print(f"   Loaded {len(train_data)} training samples, {len(test_data)} test samples")
+    return train_data, test_data, train_lbl, test_lbl
 
 
 def demonstrate_differentiability_fix():
     """Demonstrate that the differentiability issue has been addressed."""
     print("=== Demonstrating Differentiability Fix ===\n")
     
-    # Create synthetic data
-    print("1. Creating synthetic data...")
-    data = create_synthetic_data(n_samples=100)
+    # Load real MNIST data
+    print("1. Loading real MNIST data...")
+    train_data, test_data, train_lbl, test_lbl = load_mnist_data()
+    
+    # Use a subset for demonstration
+    data = train_data[:100]  # Use first 100 training samples
     
     # Create a sparse layer
     print("2. Creating sparse layer with k=10...")
@@ -110,9 +93,13 @@ def create_visualization_comparison():
     """Create a visualization comparing different k values."""
     print("\n=== Creating Visualization Comparison ===\n")
     
-    # Create synthetic data
-    data = create_synthetic_data(n_samples=50)
-    test_data = data[:10]  # Use first 10 samples for visualization
+    # Load real MNIST data
+    print("Loading MNIST data for visualization...")
+    train_data, test_data, train_lbl, test_lbl = load_mnist_data()
+    
+    # Use a subset for training and visualization
+    data = train_data[:1000]  # Use first 1000 samples for training
+    viz_data = test_data[:10]  # Use first 10 test samples for visualization
     
     k_values = [5, 10, 20, 30]
     
@@ -123,7 +110,7 @@ def create_visualization_comparison():
     
     # Show original images
     for i in range(10):
-        img = test_data[i].reshape(28, 28)
+        img = viz_data[i].reshape(28, 28)
         axes[0, i].imshow(img, cmap='gray')
         axes[0, i].set_title(f'Original {i+1}' if i < 3 else '')
         axes[0, i].axis('off')
@@ -144,7 +131,7 @@ def create_visualization_comparison():
         history = network.train(data, data, learning_rate=0.1, epochs=50, print_epochs=50)
         
         # Get reconstructions
-        reconstructions = network.predict(test_data)
+        reconstructions = network.predict(viz_data)
         
         # Plot reconstructions
         for i in range(10):
@@ -154,7 +141,7 @@ def create_visualization_comparison():
             axes[k_idx + 1, i].axis('off')
         
         # Calculate and print reconstruction quality
-        mse = np.mean((test_data - reconstructions) ** 2)
+        mse = np.mean((viz_data - reconstructions) ** 2)
         print(f"   - k={k}: MSE = {mse:.4f}")
     
     plt.tight_layout()
