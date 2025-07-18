@@ -9,7 +9,10 @@
       "Bash(git commit:*)",
       "Bash(python -m pytest tests/layers/test_sparse_layer.py::TestSparseLayer::test_zero_k_sparse -v)",
       "Bash(python -m pytest tests/nets/test_fcnn.py -v)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:yann.lecun.com)"
     ],
     "deny": []
   }

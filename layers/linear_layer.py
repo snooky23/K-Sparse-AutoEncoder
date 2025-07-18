@@ -31,6 +31,8 @@ class LinearLayer:
             activation: Activation function to use
         """
         self.name = name
+        self.n_in = n_in
+        self.n_out = n_out
         self.activation = activation
         self.result: np.ndarray = np.array([])
 
