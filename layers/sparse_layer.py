@@ -44,12 +44,24 @@ class SparseLayer(LinearLayer):
         result = self.activation(x.dot(self.weights) + self.biases)
 
         k = self.num_k_sparse
-        if k < result.shape[1]:
-            for raw in result:
-                indices = np.argpartition(raw, -k)[-k:]
-                mask = np.ones(raw.shape, dtype=bool)
-                mask[indices] = False
-                raw[mask] = 0
+        n_out = result.shape[1]
+        
+        # Apply sparsity constraint
+        if k == 0:
+            # Special case: zero out all activations
+            result = np.zeros_like(result)
+        elif k < n_out:
+            # Vectorized implementation for better performance
+            # Get indices of k largest elements for each sample
+            indices = np.argpartition(result, -k, axis=1)[:, -k:]
+            
+            # Create mask and apply sparsity
+            mask = np.zeros_like(result, dtype=bool)
+            batch_indices = np.arange(result.shape[0])[:, np.newaxis]
+            mask[batch_indices, indices] = True
+            
+            # Zero out non-selected elements
+            result[~mask] = 0
 
         self.result = result
         return result

@@ -91,12 +91,8 @@ class TestSparseLayer(unittest.TestCase):
         zero_k_layer = SparseLayer("zero_k", n_in=5, n_out=5, num_k_sparse=0)
         output = zero_k_layer.get_output(self.test_input[:1])
         
-        # With k=0, current implementation doesn't apply sparsity due to empty indices
-        # So output will be normal activation result, not zeros
-        # Let's just verify the shape and that it's not all zeros (current behavior)
-        self.assertEqual(output.shape, (1, 5))
-        # Since this is unexpected behavior, we'll test current actual behavior
-        # In Phase 3, we can optimize this to properly handle k=0
+        # With k=0, all outputs should be zero (optimized implementation)
+        np.testing.assert_array_equal(output, np.zeros((1, 5)))
 
     def test_deterministic_sparsity(self) -> None:
         """Test that sparsity pattern is deterministic for same input."""

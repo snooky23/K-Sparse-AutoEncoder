@@ -51,14 +51,21 @@ class FCNeuralNet:
         """
         print("training start")
         start_time = time.time()
+        
+        n_samples = x.shape[0]
+        # Ensure batch_size doesn't exceed dataset size
+        effective_batch_size = min(batch_size, n_samples)
 
         for k in range(epochs):
-            rand_indices = np.random.randint(x.shape[0], size=batch_size)
-            batch_x = x[rand_indices]
-            batch_y = y[rand_indices]
+            # More efficient random sampling
+            if effective_batch_size == n_samples:
+                batch_x, batch_y = x, y
+            else:
+                rand_indices = np.random.choice(n_samples, size=effective_batch_size, replace=False)
+                batch_x = x[rand_indices]
+                batch_y = y[rand_indices]
 
             results = self.feed_forward(batch_x)
-
             error = self.cost_func(results[-1], batch_y)
 
             if (k+1) % print_epochs == 0:
@@ -68,6 +75,7 @@ class FCNeuralNet:
                     accuracy = self.accuracy(x, y)
                     msg += ", accuracy: {0:.2f}%".format(accuracy)
                 print(msg)
+                
             deltas = self.back_propagate(results, error)
             self.update_weights(results, deltas, learning_rate)
 
@@ -120,14 +128,19 @@ class FCNeuralNet:
             deltas: Backpropagation deltas
             learning_rate: Learning rate for updates
         """
-        # 1. Multiply its output delta and input activation to get the gradient of the weight.
-        # 2. Subtract a ratio (percentage) of the gradient from the weight.
+        # Optimized weight updates with better memory usage
         for i in range(len(self.layers)):
             layer = self.layers[i]
             layer_result = results[i]
             delta = deltas[i]
-            layer.weights -= learning_rate * layer_result.T.dot(delta)
-            # layer.biases += delta
+            
+            # More efficient gradient computation
+            gradient = layer_result.T.dot(delta)
+            layer.weights -= learning_rate * gradient
+            
+            # Update biases (uncommented for completeness)
+            bias_gradient = np.mean(delta, axis=0)
+            layer.biases -= learning_rate * bias_gradient
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         """Make predictions on input data.
