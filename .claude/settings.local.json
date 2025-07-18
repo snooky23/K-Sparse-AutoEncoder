@@ -12,7 +12,9 @@
       "Bash(python:*)",
       "Bash(git push:*)",
       "Bash(find:*)",
-      "WebFetch(domain:yann.lecun.com)"
+      "WebFetch(domain:yann.lecun.com)",
+      "Bash(rm:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
