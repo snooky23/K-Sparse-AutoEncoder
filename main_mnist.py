@@ -121,8 +121,8 @@ def add_plot_images(images: np.ndarray, cols: int = 10, img_size: int = 28, titl
 
 def main() -> None:
     """Main function to choose between classification and autoencoder tasks."""
-    is_auto_encoder = False
-    # is_auto_encoder = True
+    is_auto_encoder = True  # Changed to True to run autoencoder
+    # is_auto_encoder = False
     if is_auto_encoder:
         run_auto_encoder()
     else:

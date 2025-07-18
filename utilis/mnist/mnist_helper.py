@@ -6,7 +6,7 @@ for handwritten digit recognition tasks.
 from typing import Tuple
 import numpy as np
 import os
-import urllib
+import urllib.request
 import gzip
 import struct
 

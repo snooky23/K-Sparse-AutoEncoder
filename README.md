@@ -36,12 +36,28 @@ K-Sparse Autoencoders find the k highest activations in the hidden layer and zer
 - Only the k most significant features are preserved
 - Error backpropagation occurs only through active nodes
 - Results in sparse, interpretable representations
+- **Differentiable Implementation**: Addresses gradient flow issues for proper training
 
 ![K-Sparse AutoEncoder](images/Autoencoder_2.png)
 
+### 🔧 Differentiability Fix
+This implementation solves the non-differentiability issue of top-k selection (see [GitHub Issue #1](https://github.com/snooky23/K-Sparse-AutoEncoder/issues/1)) by:
+- Creating binary masks in the forward pass
+- Routing gradients through selected neurons only
+- Maintaining sparsity while enabling proper gradient flow
+- Full documentation: [DIFFERENTIABILITY_FIX.md](DIFFERENTIABILITY_FIX.md)
+
 ## 🎯 Results for Different K Values
 
-The following images show reconstruction quality with different sparsity levels:
+### Updated Results with Differentiable Implementation
+
+The following shows reconstruction quality with different sparsity levels using the improved differentiable sparse layer:
+
+![Differentiable K-Sparse Comparison](images/differentiable_k_sparse_comparison.png)
+
+*This comparison demonstrates the differentiable implementation with proper gradient flow through sparse layers.*
+
+### Original Results
 
 | K=10 | K=25 |
 |------|------|
@@ -50,6 +66,8 @@ The following images show reconstruction quality with different sparsity levels:
 | K=40 | K=70 |
 |------|------|
 | ![K=40](images/k=40.PNG) | ![K=70](images/k=70.PNG) |
+
+*Note: Original results from the initial implementation. The new differentiable implementation provides better training stability and convergence.*
 
 ## 🛠 Installation & Usage
 

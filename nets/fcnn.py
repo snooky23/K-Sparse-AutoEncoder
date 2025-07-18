@@ -232,6 +232,13 @@ class FCNeuralNet:
         for i in range(len(results) - 2, 0, -1):
             layer = self.layers[i]
             delta = deltas[-1].dot(layer.weights.T) * layer.activation(results[i], derivative=True)
+            
+            # Handle sparsity mask for SparseLayer (addresses differentiability issue)
+            if hasattr(layer, 'sparsity_mask'):
+                # Apply the sparsity mask to the delta to maintain gradient flow
+                # only through the selected (non-zero) activations
+                delta = delta * layer.sparsity_mask.astype(float)
+            
             deltas.append(delta)
 
         deltas.reverse()

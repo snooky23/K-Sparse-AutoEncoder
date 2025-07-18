@@ -41,27 +41,37 @@ class SparseLayer(LinearLayer):
         Returns:
             K-sparse layer output (batch_size, n_out)
         """
-        result = self.activation(x.dot(self.weights) + self.biases)
+        # Standard forward pass
+        linear_output = x.dot(self.weights) + self.biases
+        activated_output = self.activation(linear_output)
 
         k = self.num_k_sparse
-        n_out = result.shape[1]
+        n_out = activated_output.shape[1]
         
         # Apply sparsity constraint
         if k == 0:
             # Special case: zero out all activations
-            result = np.zeros_like(result)
+            result = np.zeros_like(activated_output)
+            # Store the mask for backpropagation
+            self.sparsity_mask = np.zeros_like(activated_output, dtype=bool)
         elif k < n_out:
-            # Vectorized implementation for better performance
             # Get indices of k largest elements for each sample
-            indices = np.argpartition(result, -k, axis=1)[:, -k:]
+            indices = np.argpartition(activated_output, -k, axis=1)[:, -k:]
             
             # Create mask and apply sparsity
-            mask = np.zeros_like(result, dtype=bool)
-            batch_indices = np.arange(result.shape[0])[:, np.newaxis]
+            mask = np.zeros_like(activated_output, dtype=bool)
+            batch_indices = np.arange(activated_output.shape[0])[:, np.newaxis]
             mask[batch_indices, indices] = True
             
-            # Zero out non-selected elements
-            result[~mask] = 0
+            # Store the mask for backpropagation (addresses differentiability issue)
+            self.sparsity_mask = mask
+            
+            # Apply sparsity constraint
+            result = activated_output * mask.astype(float)
+        else:
+            # No sparsity constraint needed
+            result = activated_output
+            self.sparsity_mask = np.ones_like(activated_output, dtype=bool)
 
         self.result = result
         return result
