@@ -3,10 +3,14 @@
 This module provides a complete neural network with training, prediction,
 and evaluation capabilities for both classification and autoencoder tasks.
 """
-from typing import List, Callable
+from typing import List, Callable, Optional, Tuple
 import numpy as np
 import time
 from utilis.cost_functions import subtract_err
+from utilis.regularization import (
+    l1_regularization, l2_regularization, EarlyStopping, 
+    LearningRateScheduler, gradient_clipping
+)
 
 
 class FCNeuralNet:
@@ -37,8 +41,10 @@ class FCNeuralNet:
 
     def train(self, x: np.ndarray, y: np.ndarray, learning_rate: float = 0.01, epochs: int = 10000,
               batch_size: int = 256, print_epochs: int = 1000,
-              monitor_train_accuracy: bool = False) -> None:
-        """Train the neural network.
+              monitor_train_accuracy: bool = False, validation_split: float = 0.0,
+              l1_reg: float = 0.0, l2_reg: float = 0.0, early_stopping_patience: int = 0,
+              lr_schedule: Optional[str] = None, gradient_clip_norm: float = 0.0) -> dict:
+        """Train the neural network with advanced features.
         
         Args:
             x: Training input data (n_samples, n_features)
@@ -48,40 +54,151 @@ class FCNeuralNet:
             batch_size: Size of mini-batches
             print_epochs: Print progress every N epochs
             monitor_train_accuracy: Whether to compute training accuracy
+            validation_split: Fraction of data to use for validation
+            l1_reg: L1 regularization strength
+            l2_reg: L2 regularization strength
+            early_stopping_patience: Early stopping patience (0 = disabled)
+            lr_schedule: Learning rate schedule ("step", "exponential", "cosine")
+            gradient_clip_norm: Gradient clipping norm (0 = disabled)
+            
+        Returns:
+            Dictionary containing training history
         """
         print("training start")
         start_time = time.time()
         
-        n_samples = x.shape[0]
-        # Ensure batch_size doesn't exceed dataset size
+        # Split data for validation if requested
+        if validation_split > 0.0:
+            split_idx = int(x.shape[0] * (1 - validation_split))
+            indices = np.random.permutation(x.shape[0])
+            train_idx, val_idx = indices[:split_idx], indices[split_idx:]
+            x_train, x_val = x[train_idx], x[val_idx]
+            y_train, y_val = y[train_idx], y[val_idx]
+        else:
+            x_train, y_train = x, y
+            x_val, y_val = None, None
+        
+        n_samples = x_train.shape[0]
         effective_batch_size = min(batch_size, n_samples)
-
+        
+        # Initialize training history
+        history = {
+            'train_loss': [],
+            'val_loss': [],
+            'train_accuracy': [],
+            'val_accuracy': [],
+            'learning_rates': []
+        }
+        
+        # Initialize early stopping
+        early_stopping = None
+        if early_stopping_patience > 0:
+            early_stopping = EarlyStopping(patience=early_stopping_patience, restore_best_weights=True)
+        
+        # Initialize learning rate scheduler
+        initial_lr = learning_rate
+        
         for k in range(epochs):
-            # More efficient random sampling
+            # Update learning rate based on schedule
+            if lr_schedule == "step":
+                current_lr = LearningRateScheduler.step_decay(initial_lr, epoch=k)
+            elif lr_schedule == "exponential":
+                current_lr = LearningRateScheduler.exponential_decay(initial_lr, epoch=k)
+            elif lr_schedule == "cosine":
+                current_lr = LearningRateScheduler.cosine_annealing(initial_lr, epochs, epoch=k)
+            else:
+                current_lr = learning_rate
+            
+            # Sample batch
             if effective_batch_size == n_samples:
-                batch_x, batch_y = x, y
+                batch_x, batch_y = x_train, y_train
             else:
                 rand_indices = np.random.choice(n_samples, size=effective_batch_size, replace=False)
-                batch_x = x[rand_indices]
-                batch_y = y[rand_indices]
+                batch_x = x_train[rand_indices]
+                batch_y = y_train[rand_indices]
 
+            # Forward pass
             results = self.feed_forward(batch_x)
             error = self.cost_func(results[-1], batch_y)
+            
+            # Compute base loss
+            base_loss = np.mean(np.abs(error))
+            
+            # Add regularization penalties
+            weights = [layer.weights for layer in self.layers]
+            reg_loss = 0.0
+            if l1_reg > 0:
+                reg_loss += l1_regularization(weights, l1_reg)
+            if l2_reg > 0:
+                reg_loss += l2_regularization(weights, l2_reg)
+            
+            total_loss = base_loss + reg_loss
 
-            if (k+1) % print_epochs == 0:
-                loss = np.mean(np.abs(error))
-                msg = "epochs: {0}, loss: {1:.4f}".format((k+1), loss)
-                if monitor_train_accuracy:
-                    accuracy = self.accuracy(x, y)
-                    msg += ", accuracy: {0:.2f}%".format(accuracy)
-                print(msg)
-                
+            # Backward pass
             deltas = self.back_propagate(results, error)
-            self.update_weights(results, deltas, learning_rate)
+            
+            # Apply gradient clipping if specified
+            if gradient_clip_norm > 0:
+                # Convert deltas to gradients for clipping
+                gradients = []
+                for i, delta in enumerate(deltas):
+                    gradients.append(results[i].T.dot(delta))
+                
+                gradients = gradient_clipping(gradients, gradient_clip_norm)
+                
+                # Update weights with clipped gradients
+                for i, layer in enumerate(self.layers):
+                    layer.weights -= current_lr * gradients[i]
+                    bias_gradient = np.mean(deltas[i], axis=0)
+                    layer.biases -= current_lr * bias_gradient
+            else:
+                # Standard weight update
+                self.update_weights(results, deltas, current_lr)
+            
+            # Record training metrics
+            history['train_loss'].append(total_loss)
+            history['learning_rates'].append(current_lr)
+            
+            # Compute validation metrics if validation set exists
+            val_loss = None
+            if x_val is not None:
+                val_pred = self.predict(x_val)
+                val_error = self.cost_func(val_pred, y_val)
+                val_loss = np.mean(np.abs(val_error))
+                history['val_loss'].append(val_loss)
+            
+            # Print progress
+            if (k+1) % print_epochs == 0:
+                msg = "epochs: {0}, loss: {1:.4f}, lr: {2:.6f}".format((k+1), total_loss, current_lr)
+                if monitor_train_accuracy:
+                    accuracy = self.accuracy(x_train, y_train)
+                    history['train_accuracy'].append(accuracy)
+                    msg += ", train_acc: {0:.2f}%".format(accuracy)
+                
+                if x_val is not None:
+                    val_accuracy = self.accuracy(x_val, y_val)
+                    history['val_accuracy'].append(val_accuracy)
+                    msg += ", val_loss: {0:.4f}, val_acc: {1:.2f}%".format(val_loss, val_accuracy)
+                
+                print(msg)
+            
+            # Early stopping check
+            if early_stopping is not None and x_val is not None:
+                current_weights = [layer.weights for layer in self.layers]
+                if early_stopping(val_loss, current_weights):
+                    print(f"Early stopping at epoch {k+1}")
+                    # Restore best weights
+                    best_weights = early_stopping.get_best_weights()
+                    if best_weights:
+                        for i, layer in enumerate(self.layers):
+                            layer.weights = best_weights[i]
+                    break
 
         end_time = time.time() - start_time
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time))
         print("training complete, elapsed time:", elapsed_time)
+        
+        return history
 
     def feed_forward(self, x: np.ndarray) -> List[np.ndarray]:
         """Forward pass through all layers.

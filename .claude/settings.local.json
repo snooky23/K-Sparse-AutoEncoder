@@ -7,7 +7,8 @@
       "Bash(python -m pytest tests/layers/test_linear_layer.py -v)",
       "Bash(python -m pytest tests/ -v)",
       "Bash(git commit:*)",
-      "Bash(python -m pytest tests/layers/test_sparse_layer.py::TestSparseLayer::test_zero_k_sparse -v)"
+      "Bash(python -m pytest tests/layers/test_sparse_layer.py::TestSparseLayer::test_zero_k_sparse -v)",
+      "Bash(python -m pytest tests/nets/test_fcnn.py -v)"
     ],
     "deny": []
   }
