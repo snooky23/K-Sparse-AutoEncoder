@@ -49,25 +49,19 @@ This implementation solves the non-differentiability issue of top-k selection (s
 
 ## 🎯 Results for Different K Values
 
-### Updated Results with Differentiable Implementation
-
 The following shows reconstruction quality with different sparsity levels using the improved differentiable sparse layer:
 
 ![Differentiable K-Sparse Comparison](images/differentiable_k_sparse_comparison.png)
 
-*This comparison demonstrates the differentiable implementation with proper gradient flow through sparse layers.*
+*This comparison demonstrates the differentiable implementation with proper gradient flow through sparse layers. The visualization shows original images (top row) and reconstructions with k=5, k=10, k=20, and k=30 (subsequent rows), illustrating how sparsity affects reconstruction quality.*
 
-### Original Results
+### Key Observations:
+- **k=5**: Highest sparsity, more abstract reconstructions
+- **k=10**: Good balance between sparsity and quality
+- **k=20**: Improved reconstruction detail
+- **k=30**: Best reconstruction quality with reduced sparsity
 
-| K=10 | K=25 |
-|------|------|
-| ![K=10](images/k=10.PNG) | ![K=25](images/k=25.PNG) |
-
-| K=40 | K=70 |
-|------|------|
-| ![K=40](images/k=40.PNG) | ![K=70](images/k=70.PNG) |
-
-*Note: Original results from the initial implementation. The new differentiable implementation provides better training stability and convergence.*
+The differentiable implementation ensures stable training and proper gradient flow while maintaining the sparse constraint.
 
 ## 🛠 Installation & Usage
 
