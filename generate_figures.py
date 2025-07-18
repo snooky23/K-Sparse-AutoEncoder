@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate professional-quality figures for scientific publication
+Generate high-quality figures with properly trained models
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,22 +12,6 @@ from nets.fcnn import FCNeuralNet
 from utilis.activations import sigmoid_function
 import time
 import os
-from scipy.stats import pearsonr
-from sklearn.metrics import mean_squared_error
-try:
-    from skimage.metrics import structural_similarity
-except ImportError:
-    # Fallback implementation for structural similarity
-    def structural_similarity(img1, img2, data_range=1.0):
-        """Simple SSIM implementation."""
-        mu1, mu2 = np.mean(img1), np.mean(img2)
-        sigma1_sq, sigma2_sq = np.var(img1), np.var(img2)
-        sigma12 = np.mean((img1 - mu1) * (img2 - mu2))
-        
-        c1, c2 = (0.01 * data_range) ** 2, (0.03 * data_range) ** 2
-        ssim = ((2 * mu1 * mu2 + c1) * (2 * sigma12 + c2)) / \
-               ((mu1 ** 2 + mu2 ** 2 + c1) * (sigma1_sq + sigma2_sq + c2))
-        return ssim
 
 # Set professional plotting style
 try:
@@ -57,114 +41,65 @@ def create_model(k_sparse=25):
     decoder = LinearLayer("decoder", 100, 784, sigmoid_function)
     return FCNeuralNet([encoder, decoder])
 
-def calculate_metrics(original, reconstructed):
-    """Calculate comprehensive quality metrics."""
-    mse = mean_squared_error(original, reconstructed)
-    psnr = 20 * np.log10(1.0 / np.sqrt(mse)) if mse > 0 else float('inf')
-    
-    # Calculate SSIM for image pairs
-    ssim_scores = []
-    for i in range(min(100, len(original))):  # Sample for efficiency
-        orig_img = original[i].reshape(28, 28)
-        recon_img = reconstructed[i].reshape(28, 28)
-        ssim = structural_similarity(orig_img, recon_img, data_range=1.0)
-        ssim_scores.append(ssim)
-    
-    return {
-        'mse': mse,
-        'psnr': psnr,
-        'ssim_mean': np.mean(ssim_scores),
-        'ssim_std': np.std(ssim_scores)
-    }
-
-def create_architecture_diagram():
-    """Create professional architecture diagram."""
-    fig, ax = plt.subplots(1, 1, figsize=(14, 8))
-    
-    # Define layer positions and sizes
-    layers = [
-        {'name': 'Input Layer\n(784 neurons)', 'pos': (1, 4), 'size': (1, 6), 'color': '#E8F4F8'},
-        {'name': 'Encoder\n(100 neurons)', 'pos': (4, 4.5), 'size': (1, 5), 'color': '#FFE6E6'},
-        {'name': 'K-Sparse\nActivation', 'pos': (6, 4.5), 'size': (1, 5), 'color': '#FFF2E6'},
-        {'name': 'Decoder\n(784 neurons)', 'pos': (9, 4), 'size': (1, 6), 'color': '#E6F3E6'},
-        {'name': 'Output\n(Reconstruction)', 'pos': (12, 4), 'size': (1, 6), 'color': '#F0E6FF'}
-    ]
-    
-    # Draw layers
-    for layer in layers:
-        rect = plt.Rectangle(layer['pos'], layer['size'][0], layer['size'][1], 
-                           facecolor=layer['color'], edgecolor='black', linewidth=2)
-        ax.add_patch(rect)
-        ax.text(layer['pos'][0] + layer['size'][0]/2, layer['pos'][1] + layer['size'][1]/2,
-                layer['name'], ha='center', va='center', fontsize=11, fontweight='bold')
-    
-    # Draw connections
-    connections = [
-        ((2, 7), (4, 7)),  # Input to Encoder
-        ((5, 7), (6, 7)),  # Encoder to K-Sparse
-        ((7, 7), (9, 7)),  # K-Sparse to Decoder
-        ((10, 7), (12, 7)) # Decoder to Output
-    ]
-    
-    for start, end in connections:
-        ax.arrow(start[0], start[1], end[0]-start[0]-0.1, end[1]-start[1], 
-                head_width=0.2, head_length=0.1, fc='black', ec='black', linewidth=2)
-    
-    # Add sparsity illustration
-    ax.text(6.5, 2.5, 'Top-k Selection\n(k active neurons)', ha='center', va='center',
-            fontsize=10, style='italic', bbox=dict(boxstyle="round,pad=0.3", facecolor='yellow', alpha=0.7))
-    
-    ax.set_xlim(0, 14)
-    ax.set_ylim(0, 12)
-    ax.axis('off')
-    ax.set_title('K-Sparse AutoEncoder Architecture', fontsize=16, fontweight='bold', pad=20)
-    
-    plt.tight_layout()
-    plt.savefig('images/architecture_diagram.png', dpi=300, bbox_inches='tight')
-    plt.close()
-
-def create_sparsity_analysis():
-    """Create comprehensive sparsity analysis."""
+def create_quality_analysis():
+    """Create high-quality analysis with properly trained models."""
     # Load data
+    print("📊 Loading MNIST data...")
     mnist = MnistHelper()
-    _, train_img, _, test_img = mnist.get_data()
+    train_lbl, train_img, test_lbl, test_img = mnist.get_data()
+    
+    # Use larger dataset for better training
+    train_data = train_img.reshape(-1, 784)[:10000] / 255.0
     test_data = test_img.reshape(-1, 784)[:1000] / 255.0
     
-    k_values = [5, 10, 15, 20, 25, 30, 40, 50]
+    k_values = [5, 10, 20, 30, 50]
     results = {}
     
-    print("🔬 Conducting comprehensive sparsity analysis...")
+    print("🧠 Training models with proper epochs...")
     
     for k in k_values:
-        print(f"  Analyzing k={k}...")
+        print(f"\n🔹 Training k={k} with 100 epochs...")
         model = create_model(k_sparse=k)
         
-        # Quick training for demonstration
-        model.train(test_data[:1000], test_data[:1000], epochs=30, learning_rate=0.1, batch_size=64)
+        # Proper training with more epochs
+        start_time = time.time()
+        model.train(train_data, train_data, epochs=100, learning_rate=0.1, batch_size=64, print_epochs=50)
+        training_time = time.time() - start_time
         
         # Evaluate
-        predictions = model.predict(test_data[:500])
-        metrics = calculate_metrics(test_data[:500], predictions)
+        predictions = model.predict(test_data)
+        mse = np.mean((test_data - predictions) ** 2)
+        psnr = 20 * np.log10(1.0 / np.sqrt(mse)) if mse > 0 else float('inf')
         
         results[k] = {
-            'metrics': metrics,
+            'mse': mse,
+            'psnr': psnr,
+            'training_time': training_time,
             'sparsity_ratio': k / 100,
             'compression_ratio': 1 - (k / 100),
-            'predictions': predictions[:10]
+            'predictions': predictions[:20]  # Store more samples
         }
+        
+        print(f"  ✅ k={k}: MSE={mse:.4f}, PSNR={psnr:.1f}dB, Time={training_time:.1f}s")
     
-    # Create comprehensive analysis figure
-    fig = plt.figure(figsize=(20, 12))
+    return results, test_data
+
+def create_reconstruction_showcase():
+    """Create high-quality reconstruction showcase."""
+    results, test_data = create_quality_analysis()
     
-    # 1. Quality vs Sparsity Trade-off
-    ax1 = plt.subplot(2, 4, 1)
+    # Create comprehensive figure
+    fig = plt.figure(figsize=(20, 16))
+    
+    # 1. Quality metrics comparison
+    ax1 = plt.subplot(3, 4, 1)
     k_list = list(results.keys())
-    mse_list = [results[k]['metrics']['mse'] for k in k_list]
-    psnr_list = [results[k]['metrics']['psnr'] for k in k_list]
+    mse_list = [results[k]['mse'] for k in k_list]
+    psnr_list = [results[k]['psnr'] for k in k_list]
     
     ax1_twin = ax1.twinx()
-    line1 = ax1.plot(k_list, mse_list, 'o-', color='red', linewidth=2, markersize=8, label='MSE')
-    line2 = ax1_twin.plot(k_list, psnr_list, 's-', color='blue', linewidth=2, markersize=8, label='PSNR')
+    line1 = ax1.plot(k_list, mse_list, 'o-', color='red', linewidth=3, markersize=8, label='MSE')
+    line2 = ax1_twin.plot(k_list, psnr_list, 's-', color='blue', linewidth=3, markersize=8, label='PSNR')
     
     ax1.set_xlabel('k (Active Neurons)')
     ax1.set_ylabel('MSE', color='red')
@@ -177,251 +112,188 @@ def create_sparsity_analysis():
     labels = [l.get_label() for l in lines]
     ax1.legend(lines, labels, loc='center right')
     
-    # 2. SSIM Analysis
-    ax2 = plt.subplot(2, 4, 2)
-    ssim_mean = [results[k]['metrics']['ssim_mean'] for k in k_list]
-    ssim_std = [results[k]['metrics']['ssim_std'] for k in k_list]
-    
-    ax2.errorbar(k_list, ssim_mean, yerr=ssim_std, fmt='o-', capsize=5, 
-                capthick=2, linewidth=2, markersize=8, color='green')
-    ax2.set_xlabel('k (Active Neurons)')
-    ax2.set_ylabel('SSIM')
-    ax2.set_title('Structural Similarity Index', fontweight='bold')
-    ax2.grid(True, alpha=0.3)
-    ax2.set_ylim(0, 1)
-    
-    # 3. Compression Analysis
-    ax3 = plt.subplot(2, 4, 3)
+    # 2. Compression efficiency
+    ax2 = plt.subplot(3, 4, 2)
     compression_ratios = [results[k]['compression_ratio'] for k in k_list]
     
-    bars = ax3.bar(k_list, compression_ratios, alpha=0.7, color='purple', edgecolor='black')
-    ax3.set_xlabel('k (Active Neurons)')
-    ax3.set_ylabel('Compression Ratio')
-    ax3.set_title('Compression Efficiency', fontweight='bold')
-    ax3.grid(True, alpha=0.3, axis='y')
+    bars = ax2.bar(k_list, compression_ratios, alpha=0.8, color='green', edgecolor='black')
+    ax2.set_xlabel('k (Active Neurons)')
+    ax2.set_ylabel('Compression Ratio')
+    ax2.set_title('Compression Efficiency', fontweight='bold')
+    ax2.grid(True, alpha=0.3, axis='y')
     
-    # Add value labels on bars
+    # Add value labels
     for bar, ratio in zip(bars, compression_ratios):
         height = bar.get_height()
-        ax3.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                f'{ratio:.2f}', ha='center', va='bottom', fontsize=10)
+        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                f'{ratio:.1%}', ha='center', va='bottom', fontsize=10, fontweight='bold')
     
-    # 4. Pareto Frontier
-    ax4 = plt.subplot(2, 4, 4)
-    scatter = ax4.scatter(compression_ratios, mse_list, c=k_list, s=100, 
-                         alpha=0.8, cmap='viridis', edgecolors='black')
+    # 3. Training time analysis
+    ax3 = plt.subplot(3, 4, 3)
+    training_times = [results[k]['training_time'] for k in k_list]
+    
+    ax3.plot(k_list, training_times, 'o-', color='purple', linewidth=3, markersize=8)
+    ax3.set_xlabel('k (Active Neurons)')
+    ax3.set_ylabel('Training Time (s)')
+    ax3.set_title('Training Efficiency', fontweight='bold')
+    ax3.grid(True, alpha=0.3)
+    
+    # 4. Quality-Compression Pareto frontier
+    ax4 = plt.subplot(3, 4, 4)
+    scatter = ax4.scatter(compression_ratios, mse_list, c=k_list, s=150, 
+                         alpha=0.8, cmap='viridis', edgecolors='black', linewidth=2)
     ax4.set_xlabel('Compression Ratio')
     ax4.set_ylabel('MSE')
-    ax4.set_title('Pareto Frontier Analysis', fontweight='bold')
+    ax4.set_title('Quality-Compression Pareto Frontier', fontweight='bold')
     ax4.grid(True, alpha=0.3)
     
-    # Add colorbar
-    cbar = plt.colorbar(scatter, ax=ax4)
-    cbar.set_label('k value')
+    # Add k value labels
+    for i, k in enumerate(k_list):
+        ax4.annotate(f'k={k}', (compression_ratios[i], mse_list[i]), 
+                    xytext=(5, 5), textcoords='offset points', fontsize=10, fontweight='bold')
     
-    # 5-8. Reconstruction examples for key k values
-    key_k_values = [5, 15, 30, 50]
-    for i, k in enumerate(key_k_values):
-        ax = plt.subplot(2, 4, 5 + i)
+    # 5-12. High-quality reconstruction examples
+    for i, k in enumerate(k_list):
+        # Original vs Reconstructed comparison
+        ax = plt.subplot(3, 4, 5 + i)
         
-        # Show single example: original and reconstructed side by side
-        original = test_data[0].reshape(28, 28)
-        reconstructed = results[k]['predictions'][0].reshape(28, 28)
-        # Place original and reconstructed side by side
-        examples = np.hstack([original, reconstructed])
+        # Select a clear digit example
+        digit_idx = i  # Use different digits for each k
+        original = test_data[digit_idx].reshape(28, 28)
+        reconstructed = results[k]['predictions'][digit_idx].reshape(28, 28)
         
-        ax.imshow(examples, cmap='gray', interpolation='nearest')
-        ax.set_title(f'k={k} (MSE={results[k]["metrics"]["mse"]:.4f})', fontweight='bold')
+        # Create side-by-side comparison
+        comparison = np.hstack([original, reconstructed])
+        
+        im = ax.imshow(comparison, cmap='gray', interpolation='nearest')
+        ax.set_title(f'k={k} | MSE={results[k]["mse"]:.4f}', fontweight='bold', fontsize=12)
         ax.axis('off')
+        
+        # Add separator line
+        ax.axvline(x=27.5, color='red', linewidth=2, alpha=0.7)
+        
+        # Add labels
+        ax.text(14, -2, 'Original', ha='center', va='top', fontsize=10, fontweight='bold')
+        ax.text(42, -2, 'Reconstructed', ha='center', va='top', fontsize=10, fontweight='bold')
     
-    plt.suptitle('Comprehensive K-Sparse AutoEncoder Analysis', fontsize=18, fontweight='bold')
+    plt.suptitle('High-Quality K-Sparse AutoEncoder Analysis\n(Properly Trained Models)', 
+                 fontsize=18, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('images/comprehensive_analysis.png', dpi=300, bbox_inches='tight')
+    plt.savefig('images/high_quality_analysis.png', dpi=300, bbox_inches='tight')
     plt.close()
+    
+    # Create detailed reconstruction grid
+    create_detailed_reconstruction_grid(results, test_data)
     
     return results
 
-def create_mathematical_foundation():
-    """Create figure showing mathematical foundations."""
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+def create_detailed_reconstruction_grid(results, test_data):
+    """Create detailed reconstruction grid showing multiple examples."""
+    fig, axes = plt.subplots(5, 10, figsize=(20, 10))
     
-    # 1. Sparse activation function
-    x = np.linspace(-2, 2, 1000)
-    k_values = [3, 5, 10]
+    k_values = list(results.keys())
     
-    for k in k_values:
-        # Simulate top-k selection
-        indices = np.argsort(np.abs(x))[-k:]
-        y = np.zeros_like(x)
-        y[indices] = x[indices]
-        ax1.plot(x, y, label=f'k={k}', linewidth=2)
+    for k_idx, k in enumerate(k_values):
+        for sample_idx in range(10):
+            ax = axes[k_idx, sample_idx]
+            
+            # Get original and reconstructed
+            original = test_data[sample_idx].reshape(28, 28)
+            reconstructed = results[k]['predictions'][sample_idx].reshape(28, 28)
+            
+            # Create side-by-side comparison
+            comparison = np.hstack([original, reconstructed])
+            
+            ax.imshow(comparison, cmap='gray', interpolation='nearest')
+            ax.axis('off')
+            
+            # Add separator line
+            ax.axvline(x=27.5, color='red', linewidth=1, alpha=0.5)
+            
+            # Add k value label on first column
+            if sample_idx == 0:
+                ax.text(-5, 14, f'k={k}\nMSE={results[k]["mse"]:.4f}', 
+                       ha='right', va='center', fontsize=10, fontweight='bold',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor='yellow', alpha=0.7))
+            
+            # Add sample number on first row
+            if k_idx == 0:
+                ax.text(28, -3, f'Sample {sample_idx+1}', ha='center', va='top', 
+                       fontsize=10, fontweight='bold')
     
-    ax1.set_xlabel('Input Activation')
-    ax1.set_ylabel('Output Activation')
-    ax1.set_title('Top-k Sparse Activation Function', fontweight='bold')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
-    
-    # 2. Loss function components
-    epochs = np.arange(1, 51)
-    reconstruction_loss = 0.8 * np.exp(-epochs/15) + 0.1
-    sparsity_loss = 0.3 * np.exp(-epochs/10) + 0.05
-    total_loss = reconstruction_loss + sparsity_loss
-    
-    ax2.plot(epochs, reconstruction_loss, 'b-', label='Reconstruction Loss', linewidth=2)
-    ax2.plot(epochs, sparsity_loss, 'r-', label='Sparsity Loss', linewidth=2)
-    ax2.plot(epochs, total_loss, 'k--', label='Total Loss', linewidth=2)
-    ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('Loss')
-    ax2.set_title('Loss Function Components', fontweight='bold')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    # 3. Gradient flow visualization
-    layers = ['Input', 'Encoder', 'Sparse', 'Decoder', 'Output']
-    gradient_magnitudes = [1.0, 0.8, 0.6, 0.7, 0.9]  # Simulated
-    
-    bars = ax3.bar(layers, gradient_magnitudes, color=['lightblue', 'lightcoral', 'yellow', 'lightgreen', 'lavender'])
-    ax3.set_ylabel('Gradient Magnitude')
-    ax3.set_title('Gradient Flow Through Network', fontweight='bold')
-    ax3.grid(True, alpha=0.3, axis='y')
-    
-    # Add value labels
-    for bar, mag in zip(bars, gradient_magnitudes):
-        height = bar.get_height()
-        ax3.text(bar.get_x() + bar.get_width()/2., height + 0.02,
-                f'{mag:.2f}', ha='center', va='bottom', fontsize=11)
-    
-    # 4. Sparsity pattern visualization
-    # Create synthetic sparsity pattern
-    np.random.seed(42)
-    pattern = np.random.rand(20, 50)
-    k = 10
-    
-    # Apply top-k sparsity
-    sparse_pattern = np.zeros_like(pattern)
-    for i in range(pattern.shape[0]):
-        indices = np.argsort(pattern[i])[-k:]
-        sparse_pattern[i, indices] = pattern[i, indices]
-    
-    im = ax4.imshow(sparse_pattern, cmap='viridis', aspect='auto')
-    ax4.set_xlabel('Neuron Index')
-    ax4.set_ylabel('Sample Index')
-    ax4.set_title('Sparsity Pattern (k=10)', fontweight='bold')
-    
-    # Add colorbar
-    cbar = plt.colorbar(im, ax=ax4)
-    cbar.set_label('Activation Strength')
-    
-    plt.suptitle('Mathematical Foundations of K-Sparse AutoEncoders', fontsize=16, fontweight='bold')
+    plt.suptitle('Detailed Reconstruction Comparison: Original | Reconstructed\n(High-Quality Training Results)', 
+                 fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('images/mathematical_foundation.png', dpi=300, bbox_inches='tight')
+    plt.savefig('images/detailed_high_quality_reconstructions.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-def create_performance_comparison():
-    """Create performance comparison with baselines."""
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 10))
+def create_architecture_diagram():
+    """Create clean architecture diagram."""
+    fig, ax = plt.subplots(1, 1, figsize=(16, 6))
     
-    # 1. Method comparison
-    methods = ['Standard\nAutoEncoder', 'Sparse\nAutoEncoder', 'K-Sparse\nAutoEncoder', 'Improved\nK-Sparse']
-    mse_values = [0.085, 0.072, 0.051, 0.042]  # Simulated realistic values
-    training_times = [45, 52, 38, 41]  # Simulated training times
+    # Define components
+    components = [
+        {'name': 'Input\n(28×28 MNIST)', 'pos': (1, 2), 'size': (1.5, 2), 'color': '#E3F2FD'},
+        {'name': 'Encoder\n(784→100)', 'pos': (4, 2), 'size': (1.5, 2), 'color': '#FFEBEE'},
+        {'name': 'Top-k\nSelection\n(k active)', 'pos': (7, 2), 'size': (1.5, 2), 'color': '#FFF3E0'},
+        {'name': 'Decoder\n(100→784)', 'pos': (10, 2), 'size': (1.5, 2), 'color': '#E8F5E8'},
+        {'name': 'Reconstruction\n(28×28)', 'pos': (13, 2), 'size': (1.5, 2), 'color': '#F3E5F5'}
+    ]
     
-    x = np.arange(len(methods))
-    width = 0.35
+    # Draw components
+    for comp in components:
+        rect = plt.Rectangle(comp['pos'], comp['size'][0], comp['size'][1], 
+                           facecolor=comp['color'], edgecolor='black', linewidth=2)
+        ax.add_patch(rect)
+        ax.text(comp['pos'][0] + comp['size'][0]/2, comp['pos'][1] + comp['size'][1]/2,
+                comp['name'], ha='center', va='center', fontsize=12, fontweight='bold')
     
-    bars1 = ax1.bar(x - width/2, mse_values, width, label='MSE', color='lightcoral', alpha=0.8)
-    ax1_twin = ax1.twinx()
-    bars2 = ax1_twin.bar(x + width/2, training_times, width, label='Training Time (s)', color='lightblue', alpha=0.8)
+    # Draw arrows
+    arrow_props = dict(arrowstyle='->', lw=3, color='black')
+    ax.annotate('', xy=(4, 3), xytext=(2.5, 3), arrowprops=arrow_props)
+    ax.annotate('', xy=(7, 3), xytext=(5.5, 3), arrowprops=arrow_props)
+    ax.annotate('', xy=(10, 3), xytext=(8.5, 3), arrowprops=arrow_props)
+    ax.annotate('', xy=(13, 3), xytext=(11.5, 3), arrowprops=arrow_props)
     
-    ax1.set_xlabel('Method')
-    ax1.set_ylabel('MSE', color='red')
-    ax1_twin.set_ylabel('Training Time (s)', color='blue')
-    ax1.set_title('Method Performance Comparison', fontweight='bold')
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(methods)
+    # Add gradient flow annotation
+    ax.text(7.75, 0.5, 'Differentiable\nGradient Flow', ha='center', va='center',
+            fontsize=11, style='italic', fontweight='bold',
+            bbox=dict(boxstyle="round,pad=0.5", facecolor='yellow', alpha=0.8))
     
-    # Add value labels
-    for bar, value in zip(bars1, mse_values):
-        height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.002,
-                f'{value:.3f}', ha='center', va='bottom', fontsize=10)
+    ax.set_xlim(0, 15)
+    ax.set_ylim(0, 5)
+    ax.axis('off')
+    ax.set_title('K-Sparse AutoEncoder: Differentiable Architecture', 
+                 fontsize=16, fontweight='bold', pad=20)
     
-    for bar, value in zip(bars2, training_times):
-        height = bar.get_height()
-        ax1_twin.text(bar.get_x() + bar.get_width()/2., height + 1,
-                     f'{value}s', ha='center', va='bottom', fontsize=10)
-    
-    # 2. Scalability analysis
-    hidden_sizes = [50, 100, 200, 300, 500]
-    k_sparse_times = [12, 23, 45, 67, 112]
-    standard_times = [15, 28, 58, 89, 156]
-    
-    ax2.plot(hidden_sizes, k_sparse_times, 'o-', label='K-Sparse AE', linewidth=2, markersize=8)
-    ax2.plot(hidden_sizes, standard_times, 's-', label='Standard AE', linewidth=2, markersize=8)
-    ax2.set_xlabel('Hidden Layer Size')
-    ax2.set_ylabel('Training Time (s)')
-    ax2.set_title('Scalability Analysis', fontweight='bold')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    # 3. Memory usage comparison
-    batch_sizes = [32, 64, 128, 256, 512]
-    k_sparse_memory = [145, 280, 520, 980, 1850]
-    standard_memory = [180, 340, 650, 1250, 2400]
-    
-    ax3.plot(batch_sizes, k_sparse_memory, 'o-', label='K-Sparse AE', linewidth=2, markersize=8, color='green')
-    ax3.plot(batch_sizes, standard_memory, 's-', label='Standard AE', linewidth=2, markersize=8, color='orange')
-    ax3.set_xlabel('Batch Size')
-    ax3.set_ylabel('Memory Usage (MB)')
-    ax3.set_title('Memory Efficiency', fontweight='bold')
-    ax3.legend()
-    ax3.grid(True, alpha=0.3)
-    
-    # 4. Convergence analysis
-    epochs = np.arange(1, 101)
-    k_sparse_conv = 0.15 * np.exp(-epochs/20) + 0.042
-    standard_conv = 0.18 * np.exp(-epochs/25) + 0.051
-    
-    ax4.plot(epochs, k_sparse_conv, '-', label='K-Sparse AE', linewidth=2, color='purple')
-    ax4.plot(epochs, standard_conv, '-', label='Standard AE', linewidth=2, color='brown')
-    ax4.set_xlabel('Epoch')
-    ax4.set_ylabel('Validation Loss')
-    ax4.set_title('Convergence Analysis', fontweight='bold')
-    ax4.legend()
-    ax4.grid(True, alpha=0.3)
-    
-    plt.suptitle('Performance Analysis & Benchmarking', fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('images/performance_analysis.png', dpi=300, bbox_inches='tight')
+    plt.savefig('images/clean_architecture.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def main():
-    """Generate all professional figures."""
-    print("🎨 Generating professional scientific figures...")
+    """Generate high-quality figures with properly trained models."""
+    print("🎨 Generating high-quality figures with proper training...")
     
     # Create images directory
     os.makedirs('images', exist_ok=True)
     
-    # Generate all figures
-    print("1. Creating architecture diagram...")
+    # Generate architecture diagram
+    print("1. Creating clean architecture diagram...")
     create_architecture_diagram()
     
-    print("2. Creating mathematical foundation...")
-    create_mathematical_foundation()
+    # Generate high-quality analysis
+    print("2. Creating high-quality reconstruction analysis...")
+    results = create_reconstruction_showcase()
     
-    print("3. Creating performance comparison...")
-    create_performance_comparison()
-    
-    print("4. Creating comprehensive sparsity analysis...")
-    results = create_sparsity_analysis()
-    
-    print("\n✅ All professional figures generated successfully!")
+    print("\n✅ High-quality figures generated successfully!")
     print("📁 Generated files:")
-    print("  • images/architecture_diagram.png")
-    print("  • images/mathematical_foundation.png")
-    print("  • images/performance_analysis.png")
-    print("  • images/comprehensive_analysis.png")
+    print("  • images/clean_architecture.png")
+    print("  • images/high_quality_analysis.png")
+    print("  • images/detailed_high_quality_reconstructions.png")
+    
+    print("\n📊 Results Summary:")
+    for k, data in results.items():
+        print(f"  k={k:2d}: MSE={data['mse']:.4f}, PSNR={data['psnr']:.1f}dB, Time={data['training_time']:.1f}s")
     
     return results
 

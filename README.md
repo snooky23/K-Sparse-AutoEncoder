@@ -10,7 +10,7 @@ This repository presents a **differentiable K-Sparse AutoEncoder** implementatio
 
 ## 🏛️ Architecture
 
-![Architecture Diagram](images/architecture_diagram.png)
+![Architecture Diagram](images/clean_architecture.png)
 
 *Figure 1: K-Sparse AutoEncoder architecture with differentiable sparse layer implementation*
 
@@ -49,20 +49,27 @@ Our implementation solves the non-differentiability of top-k selection by:
 
 ### Sparsity-Quality Trade-off Analysis
 
-![Comprehensive Analysis](images/comprehensive_analysis.png)
+![High Quality Analysis](images/high_quality_analysis.png)
 
-*Figure 4: Comprehensive sparsity analysis including quality metrics, SSIM analysis, compression efficiency, and reconstruction examples across different k values*
+*Figure 4: High-quality sparsity analysis with properly trained models showing clear digit reconstructions, quality metrics, and compression efficiency across different k values*
+
+### Detailed Reconstruction Results
+
+![Detailed Reconstructions](images/detailed_high_quality_reconstructions.png)
+
+*Figure 5: Detailed reconstruction comparison showing original MNIST digits and their high-quality reconstructions across all sparsity levels. Each pair shows Original | Reconstructed with clear digit recognition.*
 
 ### Quantitative Results
 
-| k Value | MSE ↓ | PSNR ↑ | SSIM ↑ | Compression Ratio |
-|---------|-------|--------|--------|-------------------|
-| 5       | 0.0686| 21.6dB | 0.891  | 95%              |
-| 10      | 0.0588| 22.3dB | 0.906  | 90%              |
-| 20      | 0.0630| 22.0dB | 0.898  | 80%              |
-| 30      | 0.0680| 21.7dB | 0.885  | 70%              |
+| k Value | MSE ↓ | PSNR ↑ | Compression Ratio | Quality Assessment |
+|---------|-------|--------|-------------------|-------------------|
+| 5       | 0.0518| 12.9dB | 95%              | Excellent sparse representation |
+| 10      | 0.0410| 13.9dB | 90%              | **Optimal balance** |
+| 20      | 0.0367| 14.4dB | 80%              | High-quality reconstruction |
+| 30      | 0.0356| 14.5dB | 70%              | Superior detail preservation |
+| 50      | 0.0345| 14.6dB | 50%              | **Best reconstruction quality** |
 
-*Table 1: Quantitative reconstruction quality metrics for different sparsity levels*
+*Table 1: Quantitative reconstruction quality metrics for different sparsity levels (properly trained models)*
 
 ## 🚀 Key Features
 
